@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "bootstrap": "^5.2.3",
+    "fontawesome-free": "^1.0.4",
+    "jquery": "^3.6.4",
+    "leaflet": "^1.9.3",
+    "leaflet.awesome-markers": "^2.0.5"
+  }
+}
