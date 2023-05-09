@@ -3,9 +3,12 @@ import geopandas as gpd
 import random
 import re
 import glob
+from uuid import uuid4
 
-
-def static_replace_with_local(htm_string):
+'''
+Replace cdn links with using static paths
+'''
+def static_replace_with_local(html_string):
     # Replace external references with local ones (allows user to manually change if replace with local doesnt work)
     replacements = {
         "https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js": "assets/leaflet.js",
@@ -21,10 +24,23 @@ def static_replace_with_local(htm_string):
     }
 
     for external, local in replacements.items():
-        html = html.replace(external, local)
+        html_string = html_string.replace(external, local)
 
-    return html
+    return html_string
 
+'''
+Replace cdn links using regex and node modules
+'''
+def replace_with_local_wrapper(html_string, static):
+    # Replace external references with local ones
+    
+    if static:
+        return static_replace_with_local(html_string)
+    
+    html_string = re.sub(
+        r"https://[^/]+/([^/]+/)*([^/]+?)(\.js|\.css)", replace_with_local, html_string
+    )
+    return html_string
 
 def replace_with_local(match):
     patterns_to_local = {
@@ -37,14 +53,12 @@ def replace_with_local(match):
 
     for pattern, local_path in patterns_to_local.items():
         if re.search(pattern, match.group(0)):
-            # Find the correct version of the package in the local_path
             local_path_versions = glob.glob(f"{local_path}@*/")
             if not local_path_versions:
                 local_path_versions = glob.glob(f"{local_path}*/")
 
             local_path_version = local_path_versions[0]
 
-            # Specify the correct folder and subfolder for each package
             folder = "dist"
             subfolder = ""
             if pattern == r"jquery":
@@ -68,37 +82,34 @@ def replace_with_local(match):
 
             return f"{local_path_version}{folder}/{subfolder}/{file_name}" if subfolder else f"{local_path_version}{folder}/{file_name}"
 
-    # Return the original match if no replacement is found
     return match.group(0)
 
-
-def main():
-    # Importing shapefiles
-    countries = gpd.read_file(
-        "assets/natural_earth/50m/ne_50m_admin_0_countries.shp")
+'''
+Creates a folium map with geopandas data
+'''
+def create_map():
+    # Read shapefiles for map layers from local files
+    countries = gpd.read_file("assets/natural_earth/50m/ne_50m_admin_0_countries.shp")
     ocean = gpd.read_file("assets/natural_earth/50m/ne_50m_ocean.shp")
-    gridlines = gpd.read_file(
-        "assets/natural_earth/50m/ne_50m_geographic_lines.shp")
-    rivers = gpd.read_file(
-        "assets/natural_earth/50m/ne_50m_rivers_lake_centerlines.shp")
-    lakes = gpd.read_file("assets/natural_earth/50m/ne_50m_lakes.shp")
+    gridlines = gpd.read_file("assets/natural_earth/50m/ne_50m_geographic_lines.shp")
+    # rivers = gpd.read_file("assets/natural_earth/50m/ne_50m_rivers_lake_centerlines.shp")
+    # lakes = gpd.read_file("assets/natural_earth/50m/ne_50m_lakes.shp")
 
-    # Defining a color palette similar to MapLibre demo tiles
+    # Define color palette for countries
     color_palette = [
         "#e6e6e6", "#f5b897", "#c5e5a4", "#b3d0d8", "#f0e1a1", "#f3c29d", "#c5d9a5",
         "#d4c6a2", "#b3d0d8", "#d4c6a2", "#c5d9a5", "#d4c6a2", "#f0e1a1"
     ]
 
-    # Assigning colors to countries
-    countries['color'] = [random.choice(color_palette)
-                          for _ in range(len(countries))]
+    # Assign random colors to each country
+    countries['color'] = [random.choice(color_palette) for _ in range(len(countries))]
 
-    # Converting data to GeoJSON
+
+     # Create folium GeoJson objects for each layer with appropriate styles
     style = {"color": "#000000", "weight": 1, "fillOpacity": 0.7}
     countries_json = folium.GeoJson(
         data=countries.to_json(),
-        style_function=lambda x: dict(
-            style, fillColor=x['properties']['color']),
+        style_function=lambda x: dict(style, fillColor=x['properties']['color']),
         name='Countries', show=True
     )
 
@@ -110,42 +121,51 @@ def main():
 
     lines_json = folium.GeoJson(
         data=gridlines.to_json(),
-        style_function=lambda x: {"color": "#000000",
-                                  "weight": 0.5, "dashArray": "5, 5"},
+        style_function=lambda x: {"color": "#000000", "weight": 0.5, "dashArray": "5, 5"},
         name='Gridlines', show=False
     )
 
-    rivers_json = folium.GeoJson(
-        data=rivers.to_json(),
-        style_function=lambda x: {"color": "#a9eafc", "weight": 0.5},
-        name='Rivers', show=False
-    )
+    # rivers_json = folium.GeoJson(
+    #     data=rivers.to_json(),
+    #     style_function=lambda x: {"color": "#a9eafc", "weight": 0.5},
+    #     name='Rivers', show=False
+    # )
 
-    lakes_json = folium.GeoJson(
-        data=lakes.to_json(),
-        style_function=lambda x: {"color": "#a9eafc", "weight": 0.5},
-        name='Lakes', show=False
-    )
+    # lakes_json = folium.GeoJson(
+    #     data=lakes.to_json(),
+    #     style_function=lambda x: {"color": "#a9eafc", "weight": 0.5},
+    #     name='Lakes', show=False
+    # )
 
-    # Creating the map
-    m = folium.Map(location=[0, 0], tiles=None,
-                   zoom_start=2, max_zoom=3, min_zoom=1.5)
-    countries_json.add_to(m)
-    ocean_json.add_to(m)
-    lines_json.add_to(m)
-    rivers_json.add_to(m)
-    lakes_json.add_to(m)
-
+    # Create a folium map and add layers to it
+    sw = countries.total_bounds[[1, 0]]
+    ne = countries.total_bounds[[3, 2]]
+    m = folium.Map(location=[0, 0], tiles=None, zoom_start=1.5, maxBounds=[sw.tolist(), ne.tolist()])
+    m.options.update(minZoom=2)
+    
+    
+    # Add the layers to the map
+    for layer in [countries_json, ocean_json, lines_json]:
+        layer.add_to(m)
+    
+    # Add a layer control to the map
     folium.LayerControl().add_to(m)
 
-    html_string = m.get_root().render()
-    # Replace external references with local ones
-    html_string = re.sub(
-        r"https://[^/]+/([^/]+/)*([^/]+?)(\.js|\.css)", replace_with_local, html_string)
-    # Save the modified HTML string to a file
-    with open("map.html", "w") as f:
+    return m
+
+'''
+Saves the folium map as an HTML file
+'''   
+def save_map_as_html(m, save_as=None, static=False):
+    out_path = save_as if save_as else f'map_{uuid4()}.html'
+    html_string = replace_with_local_wrapper(m.get_root().render(), static)
+    with open(out_path, "w") as f:
         f.write(html_string)
-
-
+    
+def main():
+    m = create_map()
+    save_map_as_html(m)
+    
 if __name__ == '__main__':
     main()
+
