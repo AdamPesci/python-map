@@ -22,6 +22,7 @@ Specifically:
             - coasline: ne_10m_coastline.shp
             - minor_islands: 10m/ne_10m_minor_islands.shp
 ```
+
 However downloading all the data at once doesn't take long and isn't very big so i'd just download 10m and 50m and place them in the `assets/natural_earth/10m/`  and `assets/natural_earth/50m/` directories respectively.  
 
 
@@ -36,7 +37,7 @@ However downloading all the data at once doesn't take long and isn't very big so
 6. Run the code as required.
 
 # Config
-If you want to use the maps without an internet connection you can update the .config files settings.   
+If you want to use the maps without an internet connection you can update settings.py   
   
 The deafults are:
 ```python
