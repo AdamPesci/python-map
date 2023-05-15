@@ -38,22 +38,44 @@ However downloading all the data at once doesn't take long and isn't very big so
 If you want to use the maps without an internet connection you can update the .config files settings.   
   
 The deafults are:
-```shellscript
+```python
 NE_SCALE=10
 ```
-```shellscript
+```python
 OFFLINE_MAP=False
 ```
-```shellscript
-LEAFLET_JS=node_modules/leaflet/dist/leaflet.js
-AWESOME_MARKERS_JS=node_modules/leaflet.awesome-markers/dist/leaflet.awesome-markers.js
-JQUERY_JS=node_modules/jquery/dist/jquery.min.js
-BOOTSTRAP_JS=node_modules/bootstrap/dist/js/bootstrap.bundle.min.js
+```python
+DEFAULT_JS = [
+    ("leaflet", 'node_modules/leaflet/dist/leaflet.js'),
+    ("jquery", "node_modules/jquery/dist/jquery.min.js"),
+    (
+        "bootstrap",
+        "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+    ),
+    (
+        "awesome_markers",
+        "node_modules/leaflet.awesome-markers/dist/leaflet.awesome-markers.min.js",
+    ), 
+]
 ```
-```shellscript
-LEAFLET_CSS=node_modules/leaflet/dist/leaflet.css
-AWESOME_MARKERS_CSS=node_modules/leaflet.awesome-markers/dist/leaflet.awesome-markers.css
-AWESOME_ROTATE_CSS=assets/js/leaflet.awesome.rotate.min.css
-BOOTSTRAP_CSS=node_modules/bootstrap/dist/css/bootstrap.min.css
-FONTAWESOME_FREE_CSS=node_modules/fontawesome-free/css/all.min.css
+```python
+DEFAULT_CSS = [
+    ("leaflet_css", "node_modules/leaflet/dist/leaflet.css"),
+    (
+        "bootstrap_css",
+        "node_modules/bootstrap/dist/css/bootstrap.min.css",
+    ),
+    (
+        "awesome_markers_font_css",
+        "node_modules/fontawesome-free/css/all.min.css",
+    ), 
+    (
+        "awesome_markers_css",
+        "node_modules/leaflet.awesome-markers/dist/leaflet.awesome-markers.css",
+    ),  
+    (
+        "awesome_rotate_css",
+        "assets/js/leaflet.awesome.rotate.min.css",
+    ), 
+]
 ```
