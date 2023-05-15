@@ -16,11 +16,12 @@ This is an interactive map exercise that uses the Folium Python package. The goa
 You'll need the 1:10m scale data.  
 
 Specifically:
+```
             - ocean: ne_10m_ocean.shp
             - gridlines: ne_10m_geographic_lines.shp
             - coasline: ne_10m_coastline.shp
             - minor_islands: 10m/ne_10m_minor_islands.shp
-
+```
 However downloading all the data at once doesn't take long and isn't very big so i'd just download 10m and 50m and place them in the `assets/natural_earth/10m/`  and `assets/natural_earth/50m/` directories respectively.  
 
 
