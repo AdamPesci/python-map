@@ -1,19 +1,20 @@
 import folium
 import geopandas as gpd
 from uuid import uuid4
-from dotenv import dotenv_values
-CONFIG = dotenv_values('.config')
-SCALE = CONFIG.get('NE_SCALE', '10')
+import settings
+
+
 
 
 '''
 Creates a folium map with geopandas data
 '''
 def create_map():
+    scale = settings.NE_SCALE
     # Read shapefiles for map layers from local files
-    ocean = gpd.read_file(f'assets/natural_earth/{SCALE}m/ne_{SCALE}m_ocean.shp')
-    gridlines = gpd.read_file(f'assets/natural_earth/{SCALE}m/ne_{SCALE}m_geographic_lines.shp')
-    coastline = gpd.read_file(f'assets/natural_earth/{SCALE}m/ne_{SCALE}m_coastline.shp')
+    ocean = gpd.read_file(f'assets/natural_earth/{scale}m/ne_{scale}m_ocean.shp')
+    gridlines = gpd.read_file(f'assets/natural_earth/{scale}m/ne_{scale}m_geographic_lines.shp')
+    coastline = gpd.read_file(f'assets/natural_earth/{scale}m/ne_{scale}m_coastline.shp')
     # minor islands only come as 10m
     minor_islands = gpd.read_file(f'assets/natural_earth/10m/ne_10m_minor_islands.shp')
 
@@ -58,44 +59,11 @@ def create_map():
     folium.LayerControl().add_to(m)
     
     # Override the deafult css and js to local paths if offline map set in config
-    if CONFIG.get('OFFLINE_MAP') == 'True':
-        override_default_js_css(m)
+    if settings.OFFLINE_MAP:
+        m.default_css = settings.DEFAULT_CSS
+        m.default_js = settings.DEFAULT_JS
 
     return m
-
-
-'''
-Overrides the default js/css paths
-'''
-def override_default_js_css(m):
-    for i, (name, _) in enumerate(m.default_js):
-            if name == 'leaflet':
-                link = CONFIG['LEAFLET_JS']
-            elif name == 'jquery':
-                link = CONFIG['JQUERY_JS']
-            elif name == 'bootstrap':
-                link = CONFIG['BOOTSTRAP_JS']
-            elif name == 'awesome_markers':
-                link = CONFIG['AWESOME_MARKERS_JS']
-            m.default_js[i] = (name, link)
-
-    # bootstrap3 glyphicons not required with bootstrap5
-    gli_index = 0
-    for i, (name, _) in enumerate(m.default_css):
-        if name == 'leaflet_css':
-            link = CONFIG['LEAFLET_CSS']
-        elif name == 'bootstrap_css':
-            link = CONFIG['BOOTSTRAP_CSS']
-        elif name == 'glyphicons_css':
-            gli_index = i
-        elif name == 'awesome_markers_font_css':
-            link = CONFIG['FONTAWESOME_FREE_CSS']
-        elif name == 'awesome_markers_css':
-            link = CONFIG['AWESOME_MARKERS_CSS']
-        elif name == 'awesome_rotate_css':
-            link = CONFIG['AWESOME_ROTATE_CSS']
-        m.default_css[i] = (name, link)
-    m.default_css.pop(gli_index)
     
 def main():
     m = create_map()
